@@ -60,7 +60,7 @@ tema_oscuro <- theme(
 
 # ── UI ────────────────────────────────────────────────────────────────────────
 ui <- page_sidebar(
-  title = "📊 Dashboard Empresarial 2024 — Shiny",
+  title = " Dashboard Empresarial 2024 — Shiny",
   theme = bs_theme(
     bg = "#0f1117", fg = "#c8cde8",
     primary = "#7c83fd", secondary = "#56cfe1",
@@ -70,7 +70,7 @@ ui <- page_sidebar(
 
   sidebar = sidebar(
     width = 260,
-    h5("🎛️ Filtros", style = "color:#7c83fd; font-weight:600;"),
+    h5(" Filtros", style = "color:#7c83fd; font-weight:600;"),
     hr(),
     checkboxGroupInput("productos", "Productos:",
       choices = unique(ventas$Producto),
@@ -97,19 +97,19 @@ ui <- page_sidebar(
   ),
 
   navset_card_tab(
-    nav_panel("📦 Ventas por Trimestre",
+    nav_panel(" Ventas por Trimestre",
       card(plotlyOutput("plot_ventas", height = "420px"))
     ),
-    nav_panel("💰 Marketing vs Ventas",
+    nav_panel(" Marketing vs Ventas",
       card(plotlyOutput("plot_scatter", height = "420px"))
     ),
-    nav_panel("🏢 Presupuesto",
+    nav_panel(" Presupuesto",
       card(plotlyOutput("plot_presupuesto", height = "420px"))
     ),
-    nav_panel("🌡️ Temperatura",
+    nav_panel(" Temperatura",
       card(plotlyOutput("plot_temperatura", height = "420px"))
     ),
-    nav_panel("⭐ Satisfacción",
+    nav_panel(" Satisfacción",
       card(plotlyOutput("plot_satisfaccion", height = "420px"))
     )
   )
