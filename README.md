@@ -87,7 +87,7 @@ shiny::runApp("app.R")
 
 La aplicación está desplegada en **shinyapps.io**:
 
-🔗 **URL en producción:** `[https://usuario.shinyapps.io/accidentes-bogota](http://127.0.0.1:6362/)`
+ **URL en producción:** `[https://usuario.shinyapps.io/accidentes-bogota](http://127.0.0.1:6362/)`
 
 Para desplegar desde R:
 
