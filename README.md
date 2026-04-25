@@ -87,7 +87,7 @@ shiny::runApp("app.R")
 
 La aplicación está desplegada en **shinyapps.io**:
 
-🔗 **URL en producción:** `https://usuario.shinyapps.io/accidentes-bogota`
+🔗 **URL en producción:** `[https://usuario.shinyapps.io/accidentes-bogota](http://127.0.0.1:6362/)`
 
 Para desplegar desde R:
 
@@ -112,6 +112,7 @@ shiny-accidentes-bogota/
 ## Autores
 
 **[Julian Camilo Cardenas Torres] — GitHub: @xzjulian0711**
+
 **[Juan Fernando Bueno Torres] — GitHub: @JuanFer2004**
 
 *Fundación Universitaria Los Libertadores — Herramientas y Visualización de Datos, 2026*
