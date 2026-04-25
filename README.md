@@ -111,7 +111,7 @@ shiny-accidentes-bogota/
 
 ## Autores
 
-- **Nombre Apellido 1**
-- **Nombre Apellido 2**
+**[Julian Camilo Cardenas Torres] — GitHub: @xzjulian0711**
+**[Juan Fernando Bueno Torres] — GitHub: @JuanFer2004**
 
 *Fundación Universitaria Los Libertadores — Herramientas y Visualización de Datos, 2026*
