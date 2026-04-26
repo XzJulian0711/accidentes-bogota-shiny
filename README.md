@@ -105,9 +105,9 @@ shiny::runApp()
 ```
 
 La aplicación se abrirá automáticamente en `http://127.0.0.1:XXXX/`.
-```
 
-```
+
+
 ## Estructura del repositorio
 
 accidentes-bogota-shiny/
