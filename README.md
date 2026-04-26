@@ -2,6 +2,12 @@
 
 # Accidentes de Transporte - Bogotá (Shiny App)
 
+Aplicación web interactiva desarrollada en **R con Shiny** que visualiza los accidentes de transporte registrados en Bogotá entre 2015 y 2025. Permite explorar los datos mediante filtros dinámicos por año, localidad, tipo de accidente y sexo de la víctima, revelando patrones geográficos, temporales y demográficos clave.
+
+## App desplegada
+**[Ver aplicación en vivo](https://xzjulian-accidentes-bogota.shinyapps.io/app-shiny/)**
+
+Este proyecto hace parte del **Proyecto 2 - Herramientas y Visualización de Datos** de la Fundación Universitaria Los Libertadores.
 ## Descripción
 
 Aplicación web interactiva desarrollada en **R con Shiny** que visualiza los accidentes de transporte registrados en Bogotá entre 2015 y 2025. Permite explorar los datos mediante filtros dinámicos por año, localidad, tipo de accidente y sexo de la víctima, revelando patrones geográficos, temporales y demográficos clave.
@@ -12,10 +18,13 @@ Este proyecto hace parte del **Proyecto 2 - Herramientas y Visualización de Dat
 
 ## Dataset
 
-- **Fuente:** [datos.gov.co](https://www.datos.gov.co/) — Datos abiertos del gobierno colombiano
-- **Archivo:** `accidentes_bogota.csv`
-- **Registros:** ~12,386 filas (expandidas por el campo `casos`)
-- **Variables principales:** año, localidad, tipo de accidente, circunstancia del hecho, ciclo vital, sexo de la víctima, medio de desplazamiento, condición de la víctima
+- **Fuente:** Datos Abiertos Bogotá — Secretaría Distrital de Gobierno
+- **URL original:** [datosabiertos.bogota.gov.co](https://datosabiertos.bogota.gov.co/)
+- **Archivo:** `data/accidentes_bogota_limpio.csv` (versión preprocesada)
+- **Descripción:** Registros de accidentes de transporte ocurridos en Bogotá entre 2015 y 2025, con información sobre ubicación (localidad), variables temporales (año, mes, día, hora), tipo de accidente, medio de transporte, causas, y perfil de la víctima (sexo, ciclo vital).
+- **Dimensiones:** 12,386 registros × 14 variables (tras limpieza)
+- **Datos geográficos:** TopoJSON oficial de las 20 localidades de Bogotá (`data/bogota_localidades.json`)
+- **Preprocesamiento aplicado:** normalización de nombres de columnas, reemplazo de "Bogotá" por "Sin localidad específica" en la columna localidad, conversión de meses y días a variables categóricas ordenadas, eliminación de columnas no relevantes para el análisis.
 
 ---
 
@@ -35,24 +44,36 @@ Este proyecto hace parte del **Proyecto 2 - Herramientas y Visualización de Dat
 
 ## Visualizaciones Implementadas
 
-1. **Serie temporal (área)** — Evolución anual de accidentes 2015–2025 con anotación del inicio de la pandemia
-2. **Barras horizontales con gradiente** — Ranking de accidentes por localidad
-3. **Donut chart** — Distribución porcentual por tipo de accidente
-4. **Pirámide poblacional** — Víctimas por sexo y grupo etario (estilo back-to-back)
-5. **Lollipop chart** — Top 8 causas de accidentes identificadas
+1. **Gráfico de área temporal** — Evolución anual de accidentes (2015-2025) con marcador vertical destacando el inicio de la pandemia. Cubre el tipo *"evolución temporal"*.
+
+2. **Mapa coroplético de Bogotá** — Mapa interactivo con las 20 localidades coloreadas según intensidad de accidentes (paleta secuencial cálida amarillo-naranja-rojo). Construido con `sf` y `plotly` a partir de un TopoJSON oficial. Cubre el tipo *"comparación geográfica entre categorías"*.
+
+3. **Donut chart de tipos de accidente** — Distribución proporcional con paleta cualitativa y agrupación inteligente de categorías menores en "Otros". Cubre el tipo *"composición o proporciones"*.
+
+4. **Pirámide poblacional** — Gráfico demográfico clásico back-to-back con hombres (azul) a la izquierda y mujeres (rojo) a la derecha, distribuidos por ciclo vital. Cubre el tipo *"distribución de variables demográficas"*.
+
+5. **Lollipop chart de causas** — Top 8 causas identificadas con palitos rojos y círculos coloreados (paleta secuencial). Alternativa elegante al gráfico de barras. Cubre el tipo *"relación entre variables"* (causa × frecuencia).
+
+Adicionalmente se incluyen **4 KPIs ejecutivos** (total de accidentes, año pico, localidad crítica, tipo predominante) que se actualizan dinámicamente con cada filtro aplicado.
 
 ---
 
 ## Tecnologías Utilizadas
 
 - **Framework:** Shiny (R)
-- **Lenguaje:** R
-- **Bibliotecas:**
+- **Lenguaje:** R 4.5.x
+- **Bibliotecas principales:**
   - `shiny` — Framework de aplicaciones web reactivas
-  - `bslib` — Temas y diseño Bootstrap moderno
+  - `bslib` — Temas Bootstrap modernos
   - `plotly` — Gráficos interactivos
   - `dplyr` / `tidyr` — Manipulación de datos
   - `readr` — Lectura del CSV
+  - `sf` — Procesamiento de geometrías geográficas
+  - `geojsonio` — Conversión de TopoJSON a objetos sf
+  - `jsonlite` — Procesamiento de JSON
+- **Datos geográficos:** TopoJSON oficial de las 20 localidades de Bogotá
+- **Plataforma de despliegue:** shinyapps.io
+- **Control de versiones:** Git + GitHub
 
 ---
 
