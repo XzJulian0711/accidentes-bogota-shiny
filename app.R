@@ -1,38 +1,76 @@
+# ============================================================
+#  ACCIDENTES DE TRANSPORTE EN BOGOTÁ — Shiny App
+# Versión final con mapa coroplético de Bogotá
+# ============================================================
+
 library(shiny)
 library(dplyr)
 library(plotly)
 library(bslib)
 library(readr)
 library(tidyr)
+library(jsonlite)
+library(sf)         # Para procesar geometrías
+library(geojsonio)  # Para convertir TopoJSON → sf
 
-# ── Cargar dataset real ────────────────────────────────────────────────────────
-df_raw <- read_csv("accidentes_bogota.csv", show_col_types = FALSE)
+# ── Cargar dataset limpio ───────────────────────────────────
+df_raw <- read_csv("data/accidentes_bogota_limpio.csv", show_col_types = FALSE)
 
+# Renombrar columnas del CSV limpio a los nombres que usa el resto del código
 df_raw <- df_raw %>%
   rename(
-    anio         = ANO,
-    sexo         = Sexo,
-    localidad    = LOCALIDAD,
-    tipo         = CLASE_O_TIPO_DE_ACCIDENTE_DE_TRANSPORTE,
-    causa        = CIRCUNSTANCIA_DEL_HECHO_DETALLADA,
-    grupo_etario = CICLO_VITAL,
-    casos        = casos
+    tipo         = tipo_accidente,
+    causa        = circunstancia,
+    grupo_etario = ciclo_vital
   ) %>%
-  filter(!is.na(localidad), localidad != "Bogotá") %>%
-  tidyr::uncount(casos)
-
+  filter(!is.na(localidad), localidad != "Sin localidad específica")
+# Variables únicas para los filtros del sidebar
 localidades_unicas <- sort(unique(df_raw$localidad))
 tipos_unicos       <- sort(unique(df_raw$tipo))
 sexos_unicos       <- sort(unique(df_raw$sexo[!is.na(df_raw$sexo)]))
 
-# ── Colores ───────────────────────────────────────────────────────────────────
+# ── Cargar TopoJSON de Bogotá y convertir a sf ──────────────
+# El TopoJSON tiene nombres en MAYÚSCULAS sin tildes,
+# vamos a mapearlos a los nombres del dataset
+mapping_localidades <- c(
+  "ANTONIO NARIÑO"    = "Antonio Nariño",
+  "BARRIOS UNIDOS"    = "Barrios Unidos",
+  "BOSA"              = "Bosa",
+  "CANDELARIA"        = "La Candelaria",
+  "CHAPINERO"         = "Chapinero",
+  "CIUDAD BOLIVAR"    = "Ciudad Bolívar",
+  "ENGATIVA"          = "Engativá",
+  "FONTIBON"          = "Fontibón",
+  "KENNEDY"           = "Kennedy",
+  "LOS MARTIRES"      = "Los Mártires",
+  "PUENTE ARANDA"     = "Puente Aranda",
+  "RAFAEL URIBE URIBE"= "Rafael Uribe Uribe",
+  "SAN CRISTOBAL"     = "San Cristóbal",
+  "SANTA FE"          = "Santa Fe",
+  "SUBA"              = "Suba",
+  "SUMAPAZ"           = "Sumapaz",
+  "TEUSAQUILLO"       = "Teusaquillo",
+  "TUNJUELITO"        = "Tunjuelito",
+  "USAQUEN"           = "Usaquén",
+  "USME"              = "Usme"
+)
+
+# Cargar TopoJSON y convertir a sf
+bogota_sf <- geojsonio::topojson_read("data/bogota_localidades.json")
+
+# Aplicar el mapeo de nombres
+bogota_sf$localidad <- mapping_localidades[bogota_sf$NOMBRE]
+
+
+# ── Colores ─────────────────────────────────────────────────
 COL_PRIMARY   <- "#E05252"
 COL_ACCENT    <- "#5B9BD5"
 COL_BG        <- "#F8F9FA"
 COL_READING   <- "#EBF3FB"
 COL_TEXT_READ <- "#1A5276"
 
-# ── Helpers UI ────────────────────────────────────────────────────────────────
+
+# ── Helpers UI ──────────────────────────────────────────────
 kpi_box <- function(label, value_ui, sub_ui = NULL) {
   tags$div(
     style = "background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:16px;margin-bottom:12px;",
@@ -58,7 +96,8 @@ insight_title <- function(text) {
   tags$h4(text, style = "font-weight:700;color:#2C3E50;margin-top:8px;")
 }
 
-# ── UI ────────────────────────────────────────────────────────────────────────
+
+# ── UI ──────────────────────────────────────────────────────
 ui <- page_sidebar(
   title = "Accidentes de Transporte - Bogotá",
   theme = bs_theme(
@@ -122,6 +161,7 @@ ui <- page_sidebar(
 
     tags$hr(style = "margin:24px 0;"),
 
+    # ── INSIGHT 1: Serie temporal ──
     insight_title("Insight 1: La pandemia marcó una caída histórica, pero el rebote ha sido explosivo"),
     tags$p("Evolución anual de accidentes", style = "font-size:14px;color:#555;margin-bottom:4px;"),
     plotlyOutput("plot_serie", height = "320px"),
@@ -129,13 +169,15 @@ ui <- page_sidebar(
 
     tags$hr(style = "margin:24px 0;"),
 
+    # ── INSIGHT 2: MAPA COROPLÉTICO ──
     insight_title("Insight 2: Kennedy, Engativá y Suba concentran los accidentes en el sur-occidente de Bogotá"),
-    tags$p("Accidentes por localidad", style = "font-size:14px;color:#555;margin-bottom:4px;"),
-    plotlyOutput("plot_localidades", height = "420px"),
-    reading_box("Las localidades del sur-occidente de Bogotá (Kennedy, Bosa, Ciudad Bolívar) y noroccidente (Engativá, Suba) concentran la mayor cantidad de accidentes. Esto coincide con zonas de alta densidad poblacional y fuerte actividad vehicular."),
+    tags$p("Mapa de calor de accidentes por localidad", style = "font-size:14px;color:#555;margin-bottom:4px;"),
+    plotlyOutput("plot_mapa", height = "550px"),
+    reading_box("El mapa revela un patrón geográfico claro: las localidades del sur-occidente de Bogotá (Kennedy, Bosa, Ciudad Bolívar) y noroccidente (Engativá, Suba) concentran la mayor cantidad de accidentes. Esto coincide con zonas de alta densidad poblacional y fuerte actividad vehicular. Localidades rurales como Sumapaz permanecen en colores claros."),
 
     tags$hr(style = "margin:24px 0;"),
 
+    # ── INSIGHT 3: Donut ──
     insight_title("Insight 3: Choque y atropello representan casi el 90% de los accidentes"),
     tags$p("Distribución por tipo de accidente", style = "font-size:14px;color:#555;margin-bottom:4px;"),
     plotlyOutput("plot_donut", height = "400px"),
@@ -143,6 +185,7 @@ ui <- page_sidebar(
 
     tags$hr(style = "margin:24px 0;"),
 
+    # ── INSIGHT 4: Pirámide ──
     insight_title("Insight 4: Hombres adultos (29-59 años) concentran la mayoría de víctimas"),
     tags$p("Pirámide poblacional de víctimas por sexo y grupo etario",
            style = "font-size:14px;color:#555;margin-bottom:4px;"),
@@ -151,6 +194,7 @@ ui <- page_sidebar(
 
     tags$hr(style = "margin:24px 0;"),
 
+    # ── INSIGHT 5: Lollipop ──
     insight_title("Insight 5: La desobediencia de señales es la principal causa identificada"),
     tags$p("Top 8 causas identificadas (excluyendo 'Sin información')",
            style = "font-size:14px;color:#555;margin-bottom:4px;"),
@@ -161,7 +205,8 @@ ui <- page_sidebar(
   )
 )
 
-# ── SERVER ────────────────────────────────────────────────────────────────────
+
+# ── SERVER ──────────────────────────────────────────────────
 server <- function(input, output, session) {
 
   df_filt <- reactive({
@@ -177,7 +222,7 @@ server <- function(input, output, session) {
 
   output$n_filtrados <- renderText({ format(nrow(df_filt()), big.mark = ",") })
 
-  # KPIs -----------------------------------------------------------------------
+  # ── KPIs ──
   output$kpi_total <- renderText({ format(nrow(df_filt()), big.mark = ",") })
 
   output$kpi_anio <- renderText({
@@ -206,7 +251,7 @@ server <- function(input, output, session) {
     d$tipo[1]
   })
 
-  # Plot 1 – Serie temporal ----------------------------------------------------
+  # ── Plot 1: Serie temporal ──
   output$plot_serie <- renderPlotly({
     d <- df_filt() %>% count(anio) %>% arrange(anio)
     plot_ly(d, x = ~anio, y = ~n, type = "scatter", mode = "lines",
@@ -226,26 +271,43 @@ server <- function(input, output, session) {
       )
   })
 
-  # Plot 2 – Barras por localidad ----------------------------------------------
-  output$plot_localidades <- renderPlotly({
-    d <- df_filt() %>% count(localidad) %>% arrange(n)
-    pal <- colorRampPalette(c("#FFFDE7", "#FF8F00", "#B71C1C"))(nrow(d))
-    plot_ly(d,
-            y = ~reorder(localidad, n), x = ~n,
-            type = "bar", orientation = "h",
-            marker = list(color = pal),
-            text = ~format(n, big.mark = ","),
-            textposition = "outside",
-            hovertemplate = "%{y}: %{x}<extra></extra>") %>%
+  # ── Plot 2: MAPA COROPLÉTICO DE BOGOTÁ ──
+  output$plot_mapa <- renderPlotly({
+    # Conteo de accidentes por localidad
+    conteo <- df_filt() %>%
+      count(localidad, name = "total")
+
+    # Unir con el sf de Bogotá
+    mapa_data <- bogota_sf %>%
+      left_join(conteo, by = "localidad") %>%
+      mutate(total = ifelse(is.na(total), 0, total))
+
+    # Crear el mapa con plotly
+    plot_ly(mapa_data) %>%
+      add_sf(
+        color = ~total,
+        colors = colorRamp(c("#FFFDE7", "#FF8F00", "#B71C1C")),
+        split = ~localidad,
+        showlegend = FALSE,
+        text = ~paste0(
+          "<b>", localidad, "</b><br>",
+          format(total, big.mark = ","), " accidentes"
+        ),
+        hoverinfo = "text",
+        stroke = I("white"),
+        span = I(1)
+      ) %>%
       layout(
-        xaxis  = list(title = "Número de accidentes"),
-        yaxis  = list(title = ""),
-        plot_bgcolor = COL_BG, paper_bgcolor = COL_BG,
-        margin = list(l = 150, r = 70, t = 20, b = 50)
-      )
+        plot_bgcolor = COL_BG,
+        paper_bgcolor = COL_BG,
+        margin = list(l = 0, r = 0, t = 20, b = 0),
+        xaxis = list(visible = FALSE),
+        yaxis = list(visible = FALSE)
+      ) %>%
+      colorbar(title = "Accidentes", x = 1, y = 0.5)
   })
 
-  # Plot 3 – Donut -------------------------------------------------------------
+  # ── Plot 3: Donut ──
   output$plot_donut <- renderPlotly({
     d <- df_filt() %>% count(tipo) %>% arrange(desc(n)) %>%
       mutate(pct = n / sum(n))
@@ -279,7 +341,7 @@ server <- function(input, output, session) {
       )
   })
 
-  # Plot 4 – Pirámide ----------------------------------------------------------
+  # ── Plot 4: Pirámide ──
   output$plot_piramide <- renderPlotly({
     orden <- c("(0 a 5) Primera Infancia", "(6 a 11) Infancia",
                "(12 a 17) Adolescencia",   "(18 a 28) Juventud",
@@ -292,7 +354,7 @@ server <- function(input, output, session) {
     hom <- d %>% filter(sexo == "Hombre") %>% mutate(n_neg = -n)
     muj <- d %>% filter(sexo == "Mujer")
     max_val <- max(c(hom$n, muj$n), na.rm = TRUE) * 1.1
-    tick_vals <- pretty(c(-max_val, max_val), n = 6)
+    tick_vals <- base::pretty(c(-max_val, max_val), n = 6)
 
     plot_ly() %>%
       add_bars(data = hom,
@@ -322,7 +384,7 @@ server <- function(input, output, session) {
       )
   })
 
-  # Plot 5 – Lollipop causas ---------------------------------------------------
+  # ── Plot 5: Lollipop causas ──
   output$plot_causas <- renderPlotly({
     d <- df_filt() %>%
       filter(!grepl("sin información", causa, ignore.case = TRUE),
