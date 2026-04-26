@@ -110,6 +110,7 @@ La aplicación se abrirá automáticamente en `http://127.0.0.1:XXXX/`.
 
 ## Estructura del repositorio
 
+
 accidentes-bogota-shiny/
 ├── app.R                              # Aplicación Shiny principal
 ├── README.md                          # Este archivo
@@ -118,7 +119,7 @@ accidentes-bogota-shiny/
 ├── accidentes_bogota_limpio.csv   # Dataset procesado
 └── bogota_localidades.json        # TopoJSON de las 20 localidades
 
-```
+
 ## Principios de diseño aplicados
 - **Unidad 1 (Fundamentos):** elección cuidada del tipo de gráfico según la naturaleza de los datos — área para series temporales, mapa coroplético para variables geográficas, donut para composición, pirámide para distribución demográfica simétrica, lollipop para rankings.
 - **Unidad 2 (Color):** uso estratégico de paletas:
